@@ -1,0 +1,216 @@
+openapi: 3.1.0
+info:
+  title: Media Rating API
+  description:
+    An API that can receive requests to rate specific media titles
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+
+# auth
+security:
+  - BasicAuth: []
+
+# paths
+paths:
+  /media:
+    get:
+      summary: Get all media
+      description:
+        Returns all media that is currently stored
+      operationId: getAllMedia
+      responses:
+        '200':
+          description:
+            Successfully fetched all media
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    $ref: '#/components/schemas/Id'
+                    $ref: '#/components/schemas/Media'
+                    $ref: '#/components/schemas/Rating'
+
+    post:
+      summary: Create a new media
+      description:
+        Creates a new media from the request body
+      operationId: createMedia
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Media'
+      responses:
+        '201':
+          description:
+            Successfully created media
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/Media'
+        
+        '400':
+          description:
+            Malformed JSON in request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  /media/{mediaId}:
+    get:
+      summary: Return an existing media
+      description:
+        Returns an existing media, where the media is identified by `mediaId`
+      operationId: getMediaById
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          description: The identifier of the media, from the parameters
+          schema:
+            type: string
+            form: uuid
+      responses:
+        '200':
+          description:
+            Successfully returned the data of the media
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/Media'
+                  - $ref: '#/components/schemas/Rating'
+        
+        '400':
+          description:
+            mediaId is not a UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+        '404':
+          description:
+            Media not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+    
+    put:
+      summary: Update an existing media's rating
+      description:
+        Updates an existing media's rating, using the average of the existing rating and the new rating
+      operationId: updateMediaById
+      parameters:
+        - name: mediaId
+          in: path
+          required: true
+          description: The identifier of the media, from the parameters
+          schema:
+            type: string
+            form: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                  - $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/Media'
+      responses:
+        '200':
+          description:
+            Successfully updated the rating of the media
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/Media'
+                  - $ref: '#/components/schemas/Rating'
+        
+        '400':
+          description:
+            mediaId is not a UUID
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        
+        '400':
+          description:
+            Malformed JSON in request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        
+        '400':
+          description:
+            mediaRating out of bounds (0-10, inclusive)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        
+        '404':
+          description:
+            Media not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+# components
+components:
+  schemas:
+    Id:
+      required:
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: An alphanumeric identifier
+
+    Rating:
+      required:
+        - rating
+      type: object
+      properties:
+        rating:
+          type: number
+
+    Media:
+      required:
+        - title
+        - releaseYear
+      type: object
+      properties:
+        title:
+          type: string
+        releaseYear:
+          type: string
+          pattern: ([0-9]{4})
+
+    Message:
+      type: object
+      properties:
+        message:
+          type: string
+
+  securitySchemes:
+    BasicAuth:
+      type: http
+      scheme: basic
