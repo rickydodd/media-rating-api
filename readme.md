@@ -4,6 +4,6 @@ An API that mediates the storage of media titles, in addition to other data poin
 
 ## To-Do
 - [ ] Separate out routes
-- [ ] Integrate MongoDB, instead of relying on in-memory data structures
+- [x] Integrate MongoDB, instead of relying on in-memory data structures
 - [ ] Integrate Redis as a caching layer
 - [ ] Enhance security features
