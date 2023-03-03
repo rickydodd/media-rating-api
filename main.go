@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/rickydodd/media-rating-api/models"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,16 +15,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
-
-type Media struct {
-	ID                uuid.UUID `json:"id" bson:"_id"`
-	Title             string    `json:"mediaTitle" bson:"title"`
-	ReleaseYear       string    `json:"mediaReleaseYear" bson:"releaseYear"`
-	NumberOfRatings   uint64    `json:"-" bson:"ratingsCount"`
-	SubmittedRating   float64   `json:"mediaRating,omitempty" bson:"-"`
-	UnprocessedRating float64   `json:"-" bson:"unprocessedRating"`
-	AverageRating     float64   `json:"mediaAverageRating" bson:"averageRating"`
-}
 
 var ctx context.Context
 var collection *mongo.Collection
@@ -63,7 +55,7 @@ func listMedia(c *gin.Context) {
 	}
 	defer cur.Close(c)
 
-	var medias []Media
+	var medias []models.Media
 	err = cur.All(ctx, &medias)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -76,7 +68,7 @@ func listMedia(c *gin.Context) {
 }
 
 func createMedia(c *gin.Context) {
-	var requestBody Media
+	var requestBody models.Media
 
 	if err := c.BindJSON(&requestBody); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -85,7 +77,7 @@ func createMedia(c *gin.Context) {
 		return
 	}
 
-	var media Media = requestBody
+	var media models.Media = requestBody
 	media.ID = uuid.New()
 	media.SubmittedRating = 0
 
@@ -110,7 +102,7 @@ func getMediaById(c *gin.Context) {
 		return
 	}
 
-	var media Media
+	var media models.Media
 	err = collection.FindOne(ctx, bson.M{
 		"_id": id,
 	}).Decode(&media)
@@ -132,7 +124,7 @@ func getMediaById(c *gin.Context) {
 
 func updateMediaRating(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
-	var requestBody Media
+	var requestBody models.Media
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -155,7 +147,7 @@ func updateMediaRating(c *gin.Context) {
 		return
 	}
 
-	var media Media
+	var media models.Media
 	err = collection.FindOne(ctx, bson.M{
 		"_id": id,
 	}).Decode(&media)
