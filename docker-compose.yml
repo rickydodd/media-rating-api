@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  api:
+    build: .
+    environment:
+      - MONGO_URI=mongodb://admin:password@mongodb:27017/test?authSource=admin
+      - MONGO_DATABASE=media-rating-api
+    ports:
+      - 8080:8080
+  mongodb:
+    image: "mongo:6.0"
+    hostname: ${MONGODB_HOST}
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    restart: on-failure
+    ports:
+      - 27017:27017
+    volumes:
+      - data-volume:/data/db
+
+volumes:
+  data-volume:
+    external: false
